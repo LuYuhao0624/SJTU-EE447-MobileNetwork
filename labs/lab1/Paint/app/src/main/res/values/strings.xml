@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Paint</string>
+    <string name="mode_casual">C</string>
+    <string name="mode_straight">S</string>
+    <string name="mode_intel_straight">IS</string>
+    <string name="mode_erase">E</string>
+</resources>
