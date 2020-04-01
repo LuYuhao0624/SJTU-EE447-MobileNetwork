@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import static com.example.paint.PaintView.CASUAL;
 import static com.example.paint.PaintView.ERASE;
@@ -20,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         paint_view = findViewById(R.id.paint_view);
 
+
         Button button_casual = findViewById(R.id.mode_casual);
         button_casual.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -28,11 +30,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Button button_straight = findViewById(R.id.mode_straight);
+        final Button button_straight = findViewById(R.id.mode_straight);
         button_straight.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 paint_view.setMode(STRAIGHT);
+                if (paint_view.intel)
+                    button_straight.setText(R.string.mode_intel_straight);
+                else
+                    button_straight.setText(R.string.mode_straight);
             }
         });
 

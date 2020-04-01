@@ -198,10 +198,13 @@ public class PaintView extends View {
     }
 
     public void setMode(int mode) {
-        if (mode == CASUAL || mode == STRAIGHT)
+        if (mode == CASUAL || mode == STRAIGHT) {
             paint.setColor(Color.BLACK);
+            paint.setStrokeWidth(4f);
+        }
         else if (mode == ERASE) {
             paint.setColor(Color.WHITE);
+            paint.setStrokeWidth(16f);
         }
         if (mode == STRAIGHT && this.mode == mode)
             intel = !intel;
