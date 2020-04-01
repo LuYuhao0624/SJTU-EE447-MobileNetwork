@@ -14,8 +14,8 @@ The whole drawing module is wrapped in the class `PaintView`. It contains three 
 
 ## Requirements
 
-- SDK version $\ge 28$
-- API level $\ge 9$
+- SDK version &ge; 28​
+- API level &ge; 9​
 
 ## Main Activity
 
@@ -55,23 +55,21 @@ Likewise, the path is stored in a `Path` object. To implement the above logic, i
 
 ### Straight Mode (intelligent)
 
-On the basis of normal mode, the start and end points of a straight line can be attached to the start or end point of an existing straight line (no matter this line is drawn in normal or intelligent mode) if the start or end point of the new line is near an existing one (if there are multiple ones then the nearest is chosen). And this applies to those lines in preview as well. In order to keep a record of all existing start and end points, we maintain a list of them in `end_points`. Difference is highlighted in red.
+On the basis of normal mode, the start and end points of a straight line can be attached to the start or end point of an existing straight line (no matter this line is drawn in normal or intelligent mode) if the start or end point of the new line is near an existing one (if there are multiple ones then the nearest is chosen). And this applies to those lines in preview as well. In order to keep a record of all existing start and end points, we maintain a list of them in `end_points`. Difference is highlighted in italic.
 
 - `ACTION_DOWN`:
-
-    1. Store the touch down coordinate to be the start point.
-    2. - <font color="red">If there exists a start or end point within a certain range of the touch down point, we change the coordinate of the start point to be the coordinate of the nearest existing start or end point.</font>
-        - <font color="red">Otherwise, store the coordinate of this touch down event and add it to `end_points`.</font>
-
+1. Store the touch down coordinate to be the start point.
+    2. - *If there exists a start or end point within a certain range of the touch down point, we change the coordinate of the start point to be the coordinate of the nearest existing start or end point.*
+        - *Otherwise, store the coordinate of this touch down event and add it to `end_points`.*
+    
 - `ACTION_MOVE`
-
     1. Reset the `Path` object if not reset before to prevent interference between previews. 
 
-    2. <font color="red">Set the starting point of the path according to the coordinate in `ACTION_DOWN`.</font>
+    2. *Set the starting point of the path according to the coordinate in `ACTION_DOWN`.*
 
-    3. - <font color="red"> If there exists a start or end point within a certain range of the touch down point, we set the coordinate of the end point to be the coordinate of the nearest one.</font>
+    3. - *If there exists a start or end point within a certain range of the touch down point, we set the coordinate of the end point to be the coordinate of the nearest one.*
 
-        - <font color="red">Otherwise, set the coordinate of the end point to be the coordinate of the current event.</font>
+        - *Otherwise, set the coordinate of the end point to be the coordinate of the current event.*
 
     4. Create a temporary bitmap which is a shallow copy of the current bitmap. Note that the path has not been drawn on the current bitmap, thus the bitmap is the same as the one when `ACTION_DOWN` takes place.
 
@@ -80,7 +78,7 @@ On the basis of normal mode, the start and end points of a straight line can be 
 - `ACTION_UP`:
 
     1. Draw the path on the bitmap (not the temporary one) and present on canvas.
-    2. <font color="red">If there does not exist a start or end point within the range of the new end point, add this new one to `end_points`.</font>
+    2. *If there does not exist a start or end point within the range of the new end point, add this new one to `end_points`.*
 
 Notice that the range is set to be a circle with a $50$-pixel radius (defined in the constant `RADIUS_SQUARE` in class `PaintView`) which performs good in both of my $2560\times1440$ devices. This might look strange in other device with a much smaller or larger resolution. It can be changed to a fraction of the screen resolution for generalization.
 
