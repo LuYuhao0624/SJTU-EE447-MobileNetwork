@@ -12,7 +12,7 @@ The whole drawing module is wrapped in the class `PaintView`. It contains three 
 
 *The project is debugged both on an API-28 virtual device and an Android-version-9 phone.*
 
-<img src="./demo/demo.gif" alt="Demo" width="600" />
+<img src="./demo/demo.gif" alt="Demo" width="300" />
 
 ## Requirements
 
