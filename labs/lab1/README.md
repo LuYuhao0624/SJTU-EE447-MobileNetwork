@@ -12,6 +12,8 @@ The whole drawing module is wrapped in the class `PaintView`. It contains three 
 
 *The project is debugged both on an API-28 virtual device and an Android-version-9 phone.*
 
+<img src="./demo/demo.gif" alt="Demo" style="zoom:67%;" />
+
 ## Requirements
 
 - SDK version &ge; 28​
@@ -32,7 +34,7 @@ This is derived from the original example except that the path is wrapped in a `
 - `ACTION_DOWN`:
     1. Create a new `Path` object and set its start point to the coordinate of the event.
 - `ACTION_MOVE`:
-    1. Draw a line from the previous end point to the new end point.
+    1. Draw a line from the previous end point to the new end point in the path.
 - `ACTION_UP`:
     1. Draw the path on the bitmap and show on the canvas.
 
@@ -80,11 +82,11 @@ On the basis of normal mode, the start and end points of a straight line can be 
     1. Draw the path on the bitmap (not the temporary one) and present on canvas.
     2. *If there does not exist a start or end point within the range of the new end point, add this new one to `end_points`.*
 
-Notice that the range is set to be a circle with a $50$-pixel radius (defined in the constant `RADIUS_SQUARE` in class `PaintView`) which performs good in both of my $2560\times1440$ devices. This might look strange in other device with a much smaller or larger resolution. It can be changed to a fraction of the screen resolution for generalization.
+Notice that the range is set to be a circle with a 50​-pixel radius (defined in the constant `RADIUS_SQUARE` in class `PaintView`) which performs good in both of my 2560&times;1440 devices. This might look strange in other device with a much smaller or larger resolution. It can be changed to a fraction of the screen resolution for generalization.
 
 ### Eraser Mode
 
-The logic of this mode is exactly the same with casual mode. The only difference is the paint. Paint in eraser mode is thicker and white (can be set to the color of background to adapt different background color).
+The logic of this mode is exactly the same with casual mode. The only difference is the paint. Paint in eraser mode is thicker and white (can be set to the color of background to adapt to different background color).
 
 Moreover, there is a clear all function, which is implemented by letting the canvas draw white (the background color) on the whole bitmap.
 
