@@ -24,12 +24,13 @@ public class SuperWiFi extends MainActivity{
      * Log.d("TEST_INFO","Your Own String Type Content Here");
      * You can also generate the String via ("String" + int/double value). for example, "CurTime " + 20 = "CurTime 20"
      * ***************************************************************************************************************/
-    private String FileLabelName = "MyPos";// Define the file Name
+    private String FileLabelName = "Me";// Define the file Name
     /*****************************************************************************************************************
      * You can define the Wi-Fi SSID to be measured in FileNameGroup, more than 2 SSIDs are OK.
      * It is noting that multiple Wi-Fi APs might share the same SSID such as SJTU.
      * ***************************************************************************************************************/
-    private String FileNameGroup[] = {"56-303", "TP-LINK_F6B7", "TP-LINK_5G_F6B7"};
+    private String FileNameGroup[] = {"56-303", "56-303_5G", "TP-LINK_F6B7",
+            "TP-LINK_5G_F6B7"};
 
     private int TestTime = 10;//Number of measurement
     private int ScanningTime = 1000;//Wait for (?) ms for next scan
@@ -51,6 +52,9 @@ public class SuperWiFi extends MainActivity{
     {
         this.mWiFiManager = (WifiManager)context.getSystemService(Context.WIFI_SERVICE);
         this.scanned = new Vector<String>();
+        for (int i = 0; i < 4; i++) {
+            a_hats.add(new LinkedList<Double>());
+        }
     }
 
     private void startScan()//The start of scanning
