@@ -9,6 +9,7 @@ import java.io.RandomAccessFile;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 import android.content.Context;
@@ -44,6 +45,8 @@ public class SuperWiFi extends MainActivity{
     private Vector<String> scanned = null;
     boolean isScanning = false;
 
+    public LinkedList<LinkedList<Double>> a_hats = new LinkedList<>();
+
     public SuperWiFi(Context context)
     {
         this.mWiFiManager = (WifiManager)context.getSystemService(Context.WIFI_SERVICE);
@@ -77,7 +80,6 @@ public class SuperWiFi extends MainActivity{
                 }
                 /*****************************************************************************************************************
 
-                 You can insert your own code here for localization.
 
                  * ***************************************************************************************************************/
                 for(int index = 1;index <= NumberOfWiFi; index++){//Mark the end of the test in the file
@@ -115,6 +117,11 @@ public class SuperWiFi extends MainActivity{
                 for(int index = 1;index <= FileNameGroup.length; index++){
                     if (ap.SSID.equals(FileNameGroup[index - 1])){//Write the result to the file
                         RSS_Value_Record[index-1] = RSS_Value_Record[index-1] + ap.level;
+
+                        if (index <= 4) {
+                            a_hats.get(index - 1).add(1.0 * ap.level);
+                        }
+
                         RSS_Measurement_Number_Record[index - 1]++;
                         write2file(FileLabelName + "-" + FileNameGroup[index - 1] + ".txt",ap.level+"\r\n");
                     }
