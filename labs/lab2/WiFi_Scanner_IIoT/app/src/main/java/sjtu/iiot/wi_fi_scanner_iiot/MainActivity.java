@@ -22,6 +22,7 @@ public class MainActivity extends Activity {
     public static int testID = 0;//The ID of the test result
     Positioning positioner;
     Map map;
+    boolean simulated = true;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -74,7 +75,13 @@ public class MainActivity extends Activity {
     }
 
     private void localize() {
-        Node posi = positioner.position();
+        Node posi;
+        if (simulated) {
+            posi = positioner.position();
+        }
+        else {
+            posi = positioner.position(rss_scan.a_hats);
+        }
         TextView posi_coord = findViewById(R.id.coord_esti);
         posi_coord.setText("estimated ("+String.format("%.3f", posi.x)+", " +
                 String.format("%.3f", posi.y) + ")");

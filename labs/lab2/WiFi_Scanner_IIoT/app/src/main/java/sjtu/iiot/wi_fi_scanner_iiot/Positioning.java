@@ -60,13 +60,35 @@ public class Positioning {
     LinkedList<Node> APs_and_device;// contain A1-A4 and device
     LinkedList<Node> all_nodes;     // contain A1-A4, device and result
     Node device, result;
+    boolean beta_get;
+    double beta_hat;
 
-    public Positioning() {
+    Positioning() {
         init_nodes();
+        beta_get = false;
     }
 
-    public Node position() {
-        double beta_hat = estimate_beta();
+    // for real-scene localization
+    Node position(LinkedList<LinkedList<Double>> real_a_hats) {
+        if (!beta_get) {
+            beta_hat = estimate_beta(get_previous(real_a_hats, 4));
+            beta_get = true;
+        }
+        result = localize(beta_hat, get_previous(real_a_hats, 3));
+        // if already have position result, delete the result
+        if (all_nodes.size() == 6) {
+            all_nodes.removeLast();
+        }
+        all_nodes.add(result);
+        return result;
+    }
+
+    // for simulated localization
+    Node position() {
+        if (!beta_get) {
+            beta_hat = estimate_beta();
+            beta_get = true;
+        }
         result = localize(beta_hat);
         // if already have position result, delete the result
         if (all_nodes.size() == 6) {
@@ -87,6 +109,14 @@ public class Positioning {
         a_hats.add(a1_hat);
         a_hats.add(a2_hat);
         a_hats.add(a3_hat);
+        double x_hat = (new Random()).nextDouble();
+        double y_hat = (new Random()).nextDouble();
+        Node node = optimize(x_hat, y_hat, beta_hat, a_hats, alpha);
+        return node;
+    }
+
+    private Node localize(double beta_hat,
+                          LinkedList<LinkedList<Double>> a_hats) {
         double x_hat = (new Random()).nextDouble();
         double y_hat = (new Random()).nextDouble();
         Node node = optimize(x_hat, y_hat, beta_hat, a_hats, alpha);
@@ -163,6 +193,27 @@ public class Positioning {
                 calibrate_scan_time, true));
         double a4_bar = mean(simulate_scan(APs_for_beta.get(3), beta,
                 calibrate_scan_time, true));
+        LinkedList<Double> solutions = solve_beta(a1_bar, a2_bar, a3_bar,
+                a4_bar, APs_for_beta.get(0), APs_for_beta.get(1),
+                APs_for_beta.get(2), APs_for_beta.get(3));
+        double x1 = solutions.get(0);
+        double y1 = solutions.get(1);
+        double x2 = solutions.get(2);
+        double y2 = solutions.get(3);
+        double beta1 = solutions.get(4);
+        double beta2 = solutions.get(5);
+        double beta1_4 = solutions.get(6);
+        double beta2_4 = solutions.get(7);
+        double delta_beta1 = Math.abs(beta1 - beta1_4);
+        double delta_beta2 = Math.abs(beta2 - beta2_4);
+        return delta_beta1 < delta_beta2 ? beta1 : beta2;
+    }
+
+    private double estimate_beta(LinkedList<LinkedList<Double>> a_hats) {
+        double a1_bar = mean(a_hats.get(0));
+        double a2_bar = mean(a_hats.get(1));
+        double a3_bar = mean(a_hats.get(2));
+        double a4_bar = mean(a_hats.get(3));
         LinkedList<Double> solutions = solve_beta(a1_bar, a2_bar, a3_bar,
                 a4_bar, APs_for_beta.get(0), APs_for_beta.get(1),
                 APs_for_beta.get(2), APs_for_beta.get(3));
@@ -256,5 +307,15 @@ public class Positioning {
         device = new Node(x0, y0);
         APs_and_device.add(device);
         all_nodes = new LinkedList<>(APs_and_device);
+    }
+
+    private LinkedList<LinkedList<Double>> get_previous(
+            LinkedList<LinkedList<Double>> list, int i
+    ) {
+        LinkedList<LinkedList<Double>> result = new LinkedList<>();
+        for (int k = 0; k < i; k++) {
+            result.add(list.get(k));
+        }
+        return result;
     }
 }
