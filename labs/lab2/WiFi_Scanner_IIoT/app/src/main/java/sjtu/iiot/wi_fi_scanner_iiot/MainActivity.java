@@ -21,7 +21,6 @@ public class MainActivity extends Activity {
     private String testlist=null;
     public static int testID = 0;//The ID of the test result
     Positioning positioner;
-    LinkedList<Node> nodes;
     Map map;
 
     @Override
@@ -38,26 +37,14 @@ public class MainActivity extends Activity {
         testID=0;
         positioner = new Positioning();
 
-        /* change settings here */
-        initAPs(0, 0,        // coord A1, do not modify this,
-                0.12, 0,     // coord A2, do not modify y2, i.e. 0
-                0.06, 0.13,  // coord A3,
-                0.08, 0.07); // coord A4
-        /* change settings here */
-
         map = findViewById(R.id.map);
-        map.setNodes(nodes);
-        final LinkedList<Node> APs = new LinkedList<>(nodes);
-
-        /* change settings here */
-        final Node device = new Node(0.03, 0.1); // coord device
-        /* change settings here */
+        map.setNodes(positioner.APs_for_beta);
 
         TextView true_coord = findViewById(R.id.coord_true);
-        true_coord.setText("truth ("+device.x+", "+device.y+")");
+        true_coord.setText(
+                "truth ("+positioner.device.x+", "+positioner.device.y+")");
         true_coord.setTextColor(Color.CYAN);
-        nodes.add(device);
-        map.setNodes(nodes);
+        map.setNodes(positioner.APs_and_device);
 
         changactivity.setOnClickListener(new Button.OnClickListener(){
             public void onClick(View v) {
@@ -81,31 +68,18 @@ public class MainActivity extends Activity {
         localize_button.setOnClickListener(new Button.OnClickListener(){
             @Override
             public void onClick(View view) {
-                localize(APs, device);
+                localize();
             }
         });
     }
 
-    private void initAPs(double x1, double y1, double x2, double y2,
-                         double x3, double y3, double x4, double y4) {
-        nodes = new LinkedList<>();
-        nodes.add(new Node(x1, y1));
-        nodes.add(new Node(x2, y2));
-        nodes.add(new Node(x3, y3));
-        nodes.add(new Node(x4, y4));
-    }
-
-    private void localize(LinkedList<Node> APs, Node device) {
-        if (nodes.size() == 6) {
-            nodes.removeLast();
-        }
-        Node posi = positioner.position(APs, device);
+    private void localize() {
+        Node posi = positioner.position();
         TextView posi_coord = findViewById(R.id.coord_esti);
         posi_coord.setText("estimated ("+String.format("%.3f", posi.x)+", " +
                 String.format("%.3f", posi.y) + ")");
         posi_coord.setTextColor(Color.MAGENTA);
-        nodes.add(posi);
-        map.setNodes(nodes);
+        map.setNodes(positioner.all_nodes);
     }
 
     // Storage Permissions

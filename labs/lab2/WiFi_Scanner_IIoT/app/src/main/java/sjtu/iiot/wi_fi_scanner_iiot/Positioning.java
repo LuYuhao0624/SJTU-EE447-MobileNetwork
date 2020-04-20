@@ -1,5 +1,6 @@
 package sjtu.iiot.wi_fi_scanner_iiot;
 
+import android.util.Log;
 import android.util.Pair;
 
 import java.util.LinkedList;
@@ -16,11 +17,11 @@ class Node {
         this.y = y;
     }
 
-    public Node(double x, double y, double a, double f) {
+    public Node(double x, double y, double f, double a) {
         this.x = x;
         this.y = y;
-        this.a = a;
         this.f = f;
+        this.a = a;
     }
 
     public void move_to(double x, double y) {
@@ -30,28 +31,57 @@ class Node {
 }
 
 public class Positioning {
-    private static int calibrate_scan_time = 100;
-    private static double sigma = 0.01;
-    private static double beta = 6;
-    private static int position_scan_time = 100;
 
-    public Node position(LinkedList<Node> APs, Node device)
-    {
-        LinkedList<Node> APs_for_beta = new LinkedList<>(APs);
-        double beta_hat = estimate_beta(APs_for_beta, device);
-        LinkedList<Node> APs_for_position = new LinkedList<>(APs);
-        APs_for_position.removeLast();
-        Node node = localize(APs_for_position, beta_hat, device);
-        return node;
+    private static double alpha = 0.0001;   // suggested learning rate
+    private static double beta = 6;         // environment medium loss
+    private static int calibrate_scan_time = 100;   // scan times for beta
+    private static int position_scan_time = 10;     // scan times for position
+    private static double x1 = 0;       // do not modify
+    private static double y1 = 0;       // do not modify
+    private static double f1 = 2400;    // frequency
+    private static double a1 = 0;       // power
+    private static double x2 = 0.12;
+    private static double y2 = 0;       // do not modify
+    private static double f2 = 2400;
+    private static double a2 = 0;
+    private static double x3 = 0.06;
+    private static double y3 = 0.13;
+    private static double f3 = 2400;
+    private static double a3 = 0;
+    private static double x4 = 0.08;
+    private static double y4 = 0.07;
+    private static double f4 = 2400;
+    private static double a4 = 0;
+    private static double x0 = 0.03;    // device coord
+    private static double y0 = 0.1;     // device coord
+
+    LinkedList<Node> APs_for_beta;  // contain A1-A4
+    LinkedList<Node> APs;           // contain A1-A3
+    LinkedList<Node> APs_and_device;// contain A1-A4 and device
+    LinkedList<Node> all_nodes;     // contain A1-A4, device and result
+    Node device, result;
+
+    public Positioning() {
+        init_nodes();
     }
 
-    private Node localize(LinkedList<Node> APs, double beta_hat,
-                                          Node device) {
-        LinkedList<Double> a1_hat = simulate_scan(device, APs.get(0), beta,
+    public Node position() {
+        double beta_hat = estimate_beta();
+        result = localize(beta_hat);
+        // if already have position result, delete the result
+        if (all_nodes.size() == 6) {
+            all_nodes.removeLast();
+        }
+        all_nodes.add(result);
+        return result;
+    }
+
+    private Node localize(double beta_hat) {
+        LinkedList<Double> a1_hat = simulate_scan(APs.get(0), beta,
                 position_scan_time, true);
-        LinkedList<Double> a2_hat = simulate_scan(device, APs.get(1), beta,
+        LinkedList<Double> a2_hat = simulate_scan(APs.get(1), beta,
                 position_scan_time, true);
-        LinkedList<Double> a3_hat = simulate_scan(device, APs.get(2), beta,
+        LinkedList<Double> a3_hat = simulate_scan(APs.get(2), beta,
                 position_scan_time, true);
         LinkedList<LinkedList<Double>> a_hats = new LinkedList<>();
         a_hats.add(a1_hat);
@@ -59,32 +89,30 @@ public class Positioning {
         a_hats.add(a3_hat);
         double x_hat = (new Random()).nextDouble();
         double y_hat = (new Random()).nextDouble();
-        Node node = optimize(x_hat, y_hat, APs, beta_hat, a_hats, 0.0001);
+        Node node = optimize(x_hat, y_hat, beta_hat, a_hats, alpha);
         return node;
     }
 
-    private Node optimize(double x_hat, double y_hat,
-                                          LinkedList<Node> APs, double beta_hat,
-                                          LinkedList<LinkedList<Double>> a_hats,
-                                          double alpha) {
-        double previous_loss = loss(x_hat, y_hat, APs, beta_hat, a_hats);
+    private Node optimize(double x_hat, double y_hat, double beta_hat,
+                          LinkedList<LinkedList<Double>> a_hats, double alpha) {
+        double previous_loss = loss(x_hat, y_hat, beta_hat, a_hats);
         double progress = 1;
         double x = x_hat;
         double y = y_hat;
-        while (progress > 0.0001) {
-            Pair<Double, Double> gradient = gradients(x, y, APs,
+        while (progress > 0.000001) {
+            Pair<Double, Double> gradient = gradients(x, y,
                     beta_hat, a_hats);
             x -= alpha * gradient.first;
             y -= alpha * gradient.second;
-            double new_loss = loss(x, y, APs, beta_hat, a_hats);
+            double new_loss = loss(x, y, beta_hat, a_hats);
             progress = previous_loss - new_loss;
             previous_loss = new_loss;
         }
         return new Node(x, y);
     }
 
-    private double loss(double x_hat, double y_hat, LinkedList<Node> APs,
-                        double beta_hat, LinkedList<LinkedList<Double>> a_hats) {
+    private double loss(double x_hat, double y_hat, double beta_hat,
+                        LinkedList<LinkedList<Double>> a_hats) {
         double loss = 0;
         for (int i = 0; i < a_hats.size(); i++) {
             double diff_x = x_hat - APs.get(i).x;
@@ -102,7 +130,7 @@ public class Positioning {
     }
 
     private Pair<Double, Double> gradients(double x_hat, double y_hat,
-                                           LinkedList<Node> APs, double beta_hat,
+                                           double beta_hat,
                                            LinkedList<LinkedList<Double>> a_hats) {
         double fx = 0;
         double fy = 0;
@@ -126,17 +154,18 @@ public class Positioning {
         return new Pair<>(fx, fy);
     }
 
-    private double estimate_beta(LinkedList<Node> APs, Node device) {
-        double a1_bar = mean(simulate_scan(device, APs.get(0), beta,
+    private double estimate_beta() {
+        double a1_bar = mean(simulate_scan(APs_for_beta.get(0), beta,
                 calibrate_scan_time, true));
-        double a2_bar = mean(simulate_scan(device, APs.get(1), beta,
+        double a2_bar = mean(simulate_scan(APs_for_beta.get(1), beta,
                 calibrate_scan_time, true));
-        double a3_bar = mean(simulate_scan(device, APs.get(2), beta,
+        double a3_bar = mean(simulate_scan(APs_for_beta.get(2), beta,
                 calibrate_scan_time, true));
-        double a4_bar = mean(simulate_scan(device, APs.get(3), beta,
+        double a4_bar = mean(simulate_scan(APs_for_beta.get(3), beta,
                 calibrate_scan_time, true));
         LinkedList<Double> solutions = solve_beta(a1_bar, a2_bar, a3_bar,
-                a4_bar, APs.get(0), APs.get(1), APs.get(2), APs.get(3));
+                a4_bar, APs_for_beta.get(0), APs_for_beta.get(1),
+                APs_for_beta.get(2), APs_for_beta.get(3));
         double x1 = solutions.get(0);
         double y1 = solutions.get(1);
         double x2 = solutions.get(2);
@@ -145,17 +174,14 @@ public class Positioning {
         double beta2 = solutions.get(5);
         double beta1_4 = solutions.get(6);
         double beta2_4 = solutions.get(7);
-        Node s1 = new Node(x1, y1);
-        Node s2 = new Node(x2, y2);
         double delta_beta1 = Math.abs(beta1 - beta1_4);
         double delta_beta2 = Math.abs(beta2 - beta2_4);
         return delta_beta1 < delta_beta2 ? beta1 : beta2;
     }
 
-    private LinkedList<Double> simulate_scan(Node device, Node AP,
-                                             double beta_local, int scan_time,
-                                             boolean noise_flag) {
-        double noise = noise_flag ? (new Random()).nextGaussian() * sigma : 0;
+    private LinkedList<Double> simulate_scan(Node AP, double beta_local,
+                                             int scan_time, boolean noise_flag) {
+        double noise = noise_flag ? (new Random()).nextGaussian() * 0.05 : 0;
         LinkedList<Double> RSSs = new LinkedList<>();
         for (int i = 0; i < scan_time; i++) {
             double RSS = AP.a - 32.45 - 20 * Math.log10(AP.f) - 10 * Math.log10(
@@ -217,5 +243,18 @@ public class Positioning {
 
     private double mean(LinkedList<Double> list) {
         return list.size() == 0 ? 0 : sum(list) / list.size();
+    }
+
+    private void init_nodes() {
+        APs = new LinkedList<>();
+        APs.add(new Node(x1, y1, f1, a1));
+        APs.add(new Node(x2, y2, f2, a2));
+        APs.add(new Node(x3, y3, f3, a3));
+        APs_for_beta = new LinkedList<>(APs);
+        APs_for_beta.add(new Node(x4, y4, f4, a4));
+        APs_and_device = new LinkedList<>(APs_for_beta);
+        device = new Node(x0, y0);
+        APs_and_device.add(device);
+        all_nodes = new LinkedList<>(APs_and_device);
     }
 }

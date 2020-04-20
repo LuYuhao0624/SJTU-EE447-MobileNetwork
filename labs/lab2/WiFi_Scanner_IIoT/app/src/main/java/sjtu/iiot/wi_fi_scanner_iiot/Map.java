@@ -51,8 +51,7 @@ public class Map extends View {
     }
 
     public void drawNodes(LinkedList<Node> nodes) {
-        // need to modify
-        double x2 = nodes.get(1).x; // need to modify
+        double x2 = nodes.get(1).x;
         for (int i = 0; i < nodes.size(); i++) {
             if (i == 3) {
                 paint.setColor(Color.BLUE);
